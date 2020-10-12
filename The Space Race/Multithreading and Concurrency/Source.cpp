@@ -1,158 +1,109 @@
 #include <iostream>
 #include <thread>
-#include <mutex>
-#include <string>
-using namespace std;
 //std::thread to launch a new thread
 
 
 int rocketAmount = 10; 
-string rocketHolder;
-string nameHolder;
-string fullText;
-mutex locker; //This is just to lock and unlock the code that all the threads are trying to use at the same time.
-bool superLock = false;
+std::string rocketHolder;
+std::string nameHolder;
+std::string fullText;
+static bool superLock = false;
+static bool complete = false;
 
-void AbortButton() {
-    while (superLock == false) {
-        int a;
-        cin >> a;
-        if (a == '\n') {
-            cout << "wowie" << endl;
-        }
-          
-    }
-        
-}
 
-void RocketLauncher(string whichRocket, string whichPilot)
+
+//Function that begins to launch the rockets
+void RocketLauncher()
 {
+    //Variable used for keeping track of the rockets.
+    int i = 0;
 
-    locker.lock(); //Only one thread can run the code at a time (until unlocked)
-    string tempHolder;  
-    tempHolder = whichRocket;
-    rocketHolder = whichRocket;
-    nameHolder = whichPilot;
-    fullText = fullText + whichRocket + " flown by " + whichPilot + ", ";
+    //The namespace that allows me to use chronos without std namespace
+    using namespace std::literals::chrono_literals;
 
-    string userinput;
+    //While main continues to await input, this while loop continues to run until the superLock is enabled, or until all 10 rockets are dispatched.
+    while (!superLock && i <= 9) {
+        //This for loop helps increment and keep the rockets launching in succession.
+        for (i; i <= 9; i++) {
+            if (!superLock) {
+                //Arrays to hold the names of the Teams, Rockets, and their Pilots.
+                std::string rockets[10] = { "Team Astro, Rocket 1", "Team Pepper, Rocket 2", "Team Sleepy, Rocket 3", "Team Rocket, Rocket 4", "Team Whatever, Rocket 5", "Team YOLO, Rocket 6", "Team Coffee, Rocket 7", "Team Pizza, Rocket 8", "Team Stargate, Rocket 9", "Team Believers, Rocket 10" };
+                std::string pilots[10] = { "Jennifer Love Hewitt", "George Washington", "Michael Scott", "Someone's Mother", "Ronald McDonald", "Doctor Suess", "The Queen of England", "Dwayne Johnson", "Jeff Bezos", "Tony Hawk" };
 
-    cout << tempHolder << " has been launched!" << endl;
-    cout << "\nRocket holding in process for " << rocketHolder << endl;
-    cout << "\nRocket is currently being flown by " << nameHolder << endl;
-    cout << "\nOur entire team is now: " << fullText << endl;
-    cout << endl;
-    cout << endl;
-    cout << endl;
-    cout << "Currently processing information from " << tempHolder << endl;
-    cout << "Press SPACE at any time to interrupt the launching sequence" << endl;
-    cout << "Please hold";
+                std::string tempHolder;
+                tempHolder = rockets[i];
+                rocketHolder = rockets[i];
+                nameHolder = pilots[i];
+                fullText = fullText + rockets[i] + " flown by " + pilots[i] + ", ";
+
+                std::cout << tempHolder << " has been launched!" << std::endl;
+                std::cout << "\nRocket holding in process for " << rocketHolder << std::endl;
+                std::cout << "Rocket is currently being flown by " << nameHolder << std::endl;
+                std::cout << "\nOur current squadron is now: " << fullText << std::endl;
+                std::cout << "\nCurrent thread ID = " << std::this_thread::get_id() << std::endl;
+                std::this_thread::sleep_for(1s);
+                //Another check to see if the button has been pressed.
+                if (superLock) {
+                    return;
+                }
+                std::cout << std::endl;
+                std::cout << std::endl;
+                std::cout << "Currently processing information from " << tempHolder << std::endl;
+                std::cout << "Press SPACE at any time to interrupt the launching sequence" << std::endl;
+                std::cout << "Please hold";
 
 
-    for (int i = 0; i < 3; i++)
-    {
-        cout << ".";        
-        this_thread::sleep_for(chrono::seconds(1)); // this code tells the thread to sleep for 3 seconds. gives a neat waiting effect
-    }
-    cout << endl;
-    cout << endl;
-    cout << endl;
-    locker.unlock(); //This finally unlocks the code for another thread
+                for (int i = 0; i < 3; i++)
+                {
+                    if (!superLock) {
+                        std::cout << ".";
+                        std::this_thread::sleep_for(1s); // this code tells the thread to sleep for 3 seconds. gives a neat waiting effect
+                    }
+                    else {
+                        return;
+                    }
+
+                }
+                std::cout << std::endl;
+                std::cout << std::endl;
+            }            
+        }
+    }   
+    //locker.unlock(); //This finally unlocks the code for another thread
+    return;
 }
 
 
 
 int main() {
-    cout << "Time to smash some buttons!" << endl;
-    cout << "Passing control over now, please initiate rockets ";
-    /*
+    using namespace std::literals::chrono_literals;
+
+    std::cout << "Time to smash some buttons!" << std::endl;
+    std::cout << "\nCurrent thread ID = " << std::this_thread::get_id() << std::endl;
+    std::cout << "Passing control over now, please initiate rockets ";
+    
     for (int i = 1; i < rocketAmount; i++)
     {
-        cout << i << ", ";
-        this_thread::sleep_for(chrono::seconds(1));
+        std::cout << i << ", ";
+        std::this_thread::sleep_for(1s);
     }
-    cout << "and 10." << endl;
-    this_thread::sleep_for(chrono::seconds(1));*/
-    AbortButton();
+    std::cout << "and 10." << std::endl;
+    std::cout << std::endl;
+    std::this_thread::sleep_for(1s);
 
-    thread r1{ RocketLauncher,"Team Astro, Rocket 1", "Jennifer Love Hewitt" };
+    std::thread launcher(RocketLauncher);
 
-    thread r2{ RocketLauncher,"Team Pepper, Rocket 2", "George Washington" };
+    std::cin.get();
+    
+    std::cout << std::endl;
+    std::cout << "***ABORT BUTTON PRESSED***" << std::endl;
+    std::cout << "Control has now been passed back to the command center.";
+    superLock = true;
+    launcher.join();
+    std::cout << "\nCurrent thread ID = " << std::this_thread::get_id() << std::endl;
+    std::cout << "" << std::endl;
 
-    thread r3{ RocketLauncher,"Team Sleepy, Rocket 3", "Michael Scott"};
-
-    thread r4{ RocketLauncher,"Team Rocket, Rocket 4","Someone's Mother"};
-
-    thread r5{ RocketLauncher,"Team Whatever, Rocket 5", "McJagger"};
-
-    thread r6{ RocketLauncher,"Team YOLO, Rocket 6", "Doctor Seuss" };
-
-    thread r7{ RocketLauncher,"Team Coffee, Rocket 7", "The Queen of England" };
-
-    thread r8{ RocketLauncher,"Team Pizza, Rocket 8", "Dwayne Johnson" };
-
-    thread r9{ RocketLauncher,"Team Stargate, Rocket 9", "Jeff Bezos" };
-
-    thread r10{ RocketLauncher,"Team Believers, Rocket 10", "Tony Hawk" };
+    std::cin.get();
 
 
-    //Checking to make sure the thread is joinable.
-    if (r1.joinable())
-    {
-        cout << "\nThread one is joinable!" << endl;
-        r1.join();
-    }
-    if (r2.joinable())
-    {
-        cout << "\nThread two is joinable!" << endl;
-        r2.join();
-    }
-    if (r3.joinable())
-    {
-        cout << "\nThread three is joinable!!" << endl;
-        r3.join();
-    }
-    if (r4.joinable())
-    {
-        cout << "\nThread four is joinable!" << endl;
-        r4.join();
-    }
-    if (r5.joinable())
-    {
-        cout << "\nThread five is joinable!" << endl;
-        r5.join();
-    }
-    if (r6.joinable())
-    {
-        cout << "\nThread six is joinable!" << endl;
-        r6.join();
-    }
-    if (r7.joinable())
-    {
-        cout << "\nThread seven is joinable!" << endl;
-        r7.join();
-    }
-    if (r8.joinable())
-    {
-        cout << "\nThread eight is joinable!" << endl;
-        r8.join();
-    }
-    if (r9.joinable())
-    {
-        cout << "\nThread nine is joinable!" << endl;
-        r9.join();
-    }
-    if (r10.joinable())
-    {
-        cout << "\nThread ten is joinable!" << endl;
-        r10.join();
-    }
-
-    cout << "Control has now been passed back to the command center." << endl;
-    cout << "" << endl;
-
-
-    system("pause");
-
-    return 0;
 }
